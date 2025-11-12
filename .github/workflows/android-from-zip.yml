@@ -12,15 +12,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Ensure unzip is available & extract project
+      - name: Extract project (handle nested folders)
         run: |
           sudo apt-get update && sudo apt-get install -y unzip
           unzip -o VerbalMoralityMonitor.zip -d .
-          # Move contents if there's a nested folder
+          echo "Checking if nested folder exists..."
           if [ -d "VerbalMoralityMonitor" ]; then
-            mv VerbalMoralityMonitor/* .
+            echo "Moving nested folder contents up"
+            mv VerbalMoralityMonitor/* . || true
+            mv VerbalMoralityMonitor/.* . 2>/dev/null || true
           fi
-          ls -la
+          ls -R | head -40
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -35,11 +37,10 @@ jobs:
         run: |
           sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
 
-      - name: Build debug APK with Gradle
-        uses: gradle/gradle-build-action@v3
-        with:
-          gradle-version: 8.7
-          arguments: assembleDebug
+      - name: Build debug APK
+        run: |
+          chmod +x gradlew || true
+          ./gradlew assembleDebug || (echo "Gradle wrapper not found, fallback"; gradle assembleDebug)
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
