@@ -1,4 +1,4 @@
-name: Android CI (build from zip)
+name: VerbalMoralityMonitor.zip
 
 on:
   workflow_dispatch:
